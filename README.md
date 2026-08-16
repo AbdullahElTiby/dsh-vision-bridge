@@ -1,5 +1,9 @@
 # dsh-vision-bridge
 
+> **npm:** `dsh-vision-bridge-dsh` · **source/GitHub:** `AbdullahElTiby/dsh-vision-bridge`
+> (the npm package is named `dsh-vision-bridge-dsh` because the shorter name
+> was already taken on npm).
+
 Host-plane plugin that gives **text-only models** (DeepSeek and any provider route
 that does not declare `image` input) the ability to "see" images, using a
 **Gemini Flash** vision model as the eyes.
@@ -47,17 +51,24 @@ a **Gemini API key**.
 ### 1. Install the package
 
 The package is installed into your web profile's `node_modules`. From the
-profile directory:
+profile directory, add the npm package:
 
 ```sh
 cd ~/.dsh/profiles/web
-pnpm add github:AbdullahElTiby/dsh-vision-bridge
+dsh plugin --profile web add dsh-vision-bridge-dsh
 ```
 
-(This installs straight from this GitHub repo. As a fallback, you can also
-copy the package folder into `~/.dsh/profiles/node_modules/` — the
-user-owned module fallback — or, once published, use
-`dsh plugin --profile web add dsh-vision-bridge`.)
+or via pnpm directly:
+
+```sh
+cd ~/.dsh/profiles/web
+pnpm add dsh-vision-bridge-dsh
+```
+
+(As a fallback you can also install straight from GitHub with
+`pnpm add github:AbdullahElTiby/dsh-vision-bridge`, or copy the package
+folder into `~/.dsh/profiles/node_modules/` — the user-owned module
+fallback.)
 
 ### 2. Register the plugin row
 

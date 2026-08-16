@@ -1,5 +1,5 @@
 {
-  "name": "dsh-vision-bridge",
+  "name": "dsh-vision-bridge-dsh",
   "description": "Vision bridge for text-only models (DeepSeek and any route without image input): Gemini Flash describes attached images at the llm/stream seam and provides the describe_image tool.",
   "version": "0.1.0",
   "type": "module",
