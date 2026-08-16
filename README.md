@@ -38,6 +38,64 @@ that does not declare `image` input) the ability to "see" images, using a
 Descriptions are cached per attachment, so history images are described once
 per session, not on every model call.
 
+## Installation for users
+
+The plugin runs inside the DeepSeek Harness (DSH) **web profile**. You need
+Node + pnpm, the DSH web app running once (so the profile folder exists), and
+a **Gemini API key**.
+
+### 1. Install the package
+
+The package is installed into your web profile's `node_modules`. From the
+profile directory:
+
+```sh
+cd ~/.dsh/profiles/web
+pnpm add github:AbdullahElTiby/dsh-vision-bridge
+```
+
+(This installs straight from this GitHub repo. As a fallback, you can also
+copy the package folder into `~/.dsh/profiles/node_modules/` — the
+user-owned module fallback — or, once published, use
+`dsh plugin --profile web add dsh-vision-bridge`.)
+
+### 2. Register the plugin row
+
+Edit `~/.dsh/profiles/web/cordis.patch.yml` and add:
+
+```yaml
+- insert:
+    - id: vision-bridge
+      name: 'dsh-vision-bridge'
+      config:
+        model: gemini-2.5-flash
+        apiKeyRef: GEMINI_API_KEY
+```
+
+### 3. Set your Gemini key
+
+Add the key to `~/.dsh/.credentials.yaml` (or export `GEMINI_API_KEY`):
+
+```yaml
+GEMINI_API_KEY: your-gemini-key
+```
+
+### 4. Restart
+
+Close and reopen DSH (`dsh web`). You can confirm the row mounts by dumping
+the composed config: `dsh --profile web --dump-config`.
+
+To verify it works, attach an image in a chat with a text-only model (e.g. a
+DeepSeek route) — it should be described instead of rejected with
+`UNSUPPORTED_CONTENT`.
+
+### Enable/disable
+
+Remove the `vision-bridge` row from `cordis.patch.yml` to disable the feature
+(hot-reloaded); delete the package folder to remove it permanently. See the
+[Notes](#notes) section for how edits to the plugin code are — and are not —
+hot-reloaded.
+
 ## Configuration (row config on the `vision-bridge` row)
 
 | key | default | meaning |
