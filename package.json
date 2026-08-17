@@ -1,7 +1,7 @@
 {
   "name": "dsh-vision-bridge-dsh",
   "description": "Vision bridge for text-only models (DeepSeek and any route without image input): a pluggable vision model (Gemini, Groq, or any OpenAI-compatible endpoint) describes attached images at the llm/stream seam and provides the describe_image tool.",
-  "version": "0.2.1",
+  "version": "0.2.2",
   "type": "module",
   "main": "lib/index.js",
   "exports": {
@@ -9,6 +9,38 @@
     "./package.json": "./package.json"
   },
   "license": "MIT",
+  "author": {
+    "name": "Abdullah",
+    "url": "https://github.com/AbdullahElTiby"
+  },
+  "files": [
+    "lib",
+    "README.md",
+    "LICENSE"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/AbdullahElTiby/dsh-vision-bridge.git"
+  },
+  "homepage": "https://github.com/AbdullahElTiby/dsh-vision-bridge#readme",
+  "bugs": {
+    "url": "https://github.com/AbdullahElTiby/dsh-vision-bridge/issues"
+  },
+  "keywords": [
+    "dsh",
+    "deepseek-harness",
+    "plugin",
+    "vision",
+    "image",
+    "multimodal",
+    "gemini",
+    "groq",
+    "describe-image",
+    "llm"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
   "scripts": {
     "test": "node smoke-test.mjs",
     "test:groq": "node live-test-groq.mjs"
