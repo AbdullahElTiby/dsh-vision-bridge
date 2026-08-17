@@ -1,7 +1,7 @@
 // Smoke test for dsh-vision-bridge: verifies the prepareCall/stream patches
 // deliver rewritten (image-free) requests to the adapter, unlike the old
 // llm/stream waterfall listener whose next() argument this harness ignores.
-import { apply } from 'file:///C:/Users/abdul/.dsh/profiles/node_modules/dsh-vision-bridge/lib/index.js'
+import { apply } from './lib/index.js'
 
 function makeHarness(resolveModelInfo, { throwOnImage = true } = {}) {
   let received = null
@@ -128,6 +128,124 @@ const imageRequest = {
   const inner = getReceived().messages[0].content[0].content
   if (JSON.stringify(inner).includes('"type":"image"')) throw new Error('FAIL 5: nested image block reached the adapter')
   console.log('PASS 5: nested tool-result bridging — inner blocks: ' + inner.map((b) => b.type).join(','))
+}
+
+// ── test 6: groq provider bridges via chat/completions ─────────────────
+{
+  const calls = []
+  const originalFetch = globalThis.fetch
+  globalThis.fetch = async (url, init) => {
+    calls.push({ url: String(url), init })
+    return {
+      ok: true,
+      status: 200,
+      async text() {
+        return ''
+      },
+      async json() {
+        return { choices: [{ message: { role: 'assistant', content: 'A fake Groq description of a PNG image.' } }] }
+      },
+    }
+  }
+  try {
+    const { ctx, getReceived } = makeHarness()
+    ctx.credentials = { resolve: async (ref) => ({ value: ref === 'GROQ_API_KEY' ? 'gsk_test_123' : undefined }) }
+    apply(ctx, { provider: 'groq' })
+    for await (const _ of ctx.llm.stream(imageRequest)) {
+      /* drain */
+    }
+    const blocks = getReceived().messages[0].content
+    const bridged = blocks.find((b) => b.type === 'text' && b.text.startsWith('[Image'))
+    if (!bridged) throw new Error('FAIL 6: expected bridged [Image ...] block from Groq')
+    if (!bridged.text.includes('A fake Groq description')) throw new Error('FAIL 6: description content missing')
+    if (calls.length !== 1) throw new Error('FAIL 6: expected exactly one fetch call, got ' + calls.length)
+    const { url, init } = calls[0]
+    if (url !== 'https://api.groq.com/openai/v1/chat/completions') throw new Error('FAIL 6: wrong URL ' + url)
+    if (init.headers.authorization !== 'Bearer gsk_test_123') throw new Error('FAIL 6: wrong auth header')
+    const payload = JSON.parse(init.body)
+    if (payload.model !== 'qwen/qwen3.6-27b') throw new Error('FAIL 6: wrong model ' + payload.model)
+    if (payload.messages[0].role !== 'system') throw new Error('FAIL 6: system message missing')
+    const imagePart = payload.messages[1].content.find((p) => p.type === 'image_url')
+    if (!imagePart || !imagePart.image_url.url.startsWith('data:image/png;base64,')) {
+      throw new Error('FAIL 6: image_url data-URL part missing')
+    }
+    console.log('PASS 6: groq provider bridging — ' + bridged.text.slice(0, 100))
+  } finally {
+    globalThis.fetch = originalFetch
+  }
+}
+
+// ── test 7: generic openai-compatible provider honors baseURL + model ───
+{
+  const calls = []
+  const originalFetch = globalThis.fetch
+  globalThis.fetch = async (url, init) => {
+    calls.push({ url: String(url), init })
+    return {
+      ok: true,
+      status: 200,
+      async text() {
+        return ''
+      },
+      async json() {
+        return { choices: [{ message: { content: 'Local model description.' } }] }
+      },
+    }
+  }
+  try {
+    const { ctx, getReceived } = makeHarness()
+    ctx.credentials = { resolve: async (ref) => ({ value: ref === 'OPENAI_API_KEY' ? 'sk-test' : undefined }) }
+    apply(ctx, { provider: 'openai', baseURL: 'http://localhost:11434/v1', model: 'llava:latest' })
+    for await (const _ of ctx.llm.stream(imageRequest)) {
+      /* drain */
+    }
+    const blocks = getReceived().messages[0].content
+    const bridged = blocks.find((b) => b.type === 'text' && b.text.startsWith('[Image'))
+    if (!bridged || !bridged.text.includes('Local model description')) {
+      throw new Error('FAIL 7: openai-compatible bridging failed')
+    }
+    if (calls[0].url !== 'http://localhost:11434/v1/chat/completions') throw new Error('FAIL 7: wrong URL ' + calls[0].url)
+    if (JSON.parse(calls[0].init.body).model !== 'llava:latest') throw new Error('FAIL 7: model override not applied')
+    console.log('PASS 7: openai-compatible provider bridging — ' + bridged.text.slice(0, 100))
+  } finally {
+    globalThis.fetch = originalFetch
+  }
+}
+
+// ── test 8: gemini provider regression (defaults + AIza auth) ───────────
+{
+  const calls = []
+  const originalFetch = globalThis.fetch
+  globalThis.fetch = async (url, init) => {
+    calls.push({ url: String(url), init })
+    return {
+      ok: true,
+      status: 200,
+      async text() {
+        return ''
+      },
+      async json() {
+        return { candidates: [{ content: { parts: [{ text: 'Gemini description.' }] } }] }
+      },
+    }
+  }
+  try {
+    const { ctx, getReceived } = makeHarness()
+    ctx.credentials = { resolve: async () => ({ value: 'AIza-test-key' }) }
+    apply(ctx, { provider: 'gemini' })
+    for await (const _ of ctx.llm.stream(imageRequest)) {
+      /* drain */
+    }
+    const bridged = getReceived().messages[0].content.find((b) => b.type === 'text' && b.text.startsWith('[Image'))
+    if (!bridged || !bridged.text.includes('Gemini description')) throw new Error('FAIL 8: gemini bridging failed')
+    if (calls[0].url !== 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent') {
+      throw new Error('FAIL 8: wrong URL ' + calls[0].url)
+    }
+    if (calls[0].init.headers['x-goog-api-key'] !== 'AIza-test-key') throw new Error('FAIL 8: wrong gemini auth header')
+    console.log('PASS 8: gemini provider regression — ' + bridged.text.slice(0, 100))
+  } finally {
+    globalThis.fetch = originalFetch
+  }
 }
 
 console.log('ALL SMOKE TESTS PASSED')
