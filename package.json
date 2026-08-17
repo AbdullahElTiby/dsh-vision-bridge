@@ -1,7 +1,7 @@
 {
   "name": "dsh-vision-bridge-dsh",
   "description": "Vision bridge for text-only models (DeepSeek and any route without image input): a pluggable vision model (Gemini, Groq, or any OpenAI-compatible endpoint) describes attached images at the llm/stream seam and provides the describe_image tool.",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "type": "module",
   "main": "lib/index.js",
   "exports": {

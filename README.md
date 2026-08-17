@@ -153,30 +153,29 @@ hot-reloaded.
 defaults. `endpoint` is the legacy name of `baseURL` and still works for the
 Gemini transport; for `groq`/`openai`, `baseURL` wins over `endpoint`.
 
-### Groq free tier — which models can see?
+### Groq free tier — which models can see? (live-verified)
 
-Groq's free plan (`console.groq.com` → Developer plan) hosts exactly three
-**vision-capable** chat models — these accept images on the free tier:
+Tested against the live API with a real PNG: on the free plan **exactly one
+chat model accepts images**:
 
 | model | vision | free limits (RPM / RPD / TPM / TPD) |
 | --- | --- | --- |
-| `qwen/qwen3.6-27b` | ✅ multimodal (vision + text), thinking + non-thinking modes — Groq's own vision-docs example, **default for `provider: groq`** | 30 / 1K / 8K / 200K |
-| `openai/gpt-oss-20b` | ✅ multimodal, compact MoE | 30 / 1K / 8K / 200K |
-| `openai/gpt-oss-120b` | ✅ multimodal, flagship MoE (best quality, slower) | 30 / 1K / 8K / 200K |
+| `qwen/qwen3.6-27b` | ✅ multimodal (vision + text), thinking + non-thinking modes — **default for `provider: groq`** | 30 / 1K / 8K / 200K |
+| `openai/gpt-oss-20b` / `openai/gpt-oss-120b` | ❌ served **text-only** on Groq — the API rejects `image_url` parts with `messages[1].content must be a string` | 30 / 1K / 8K / 200K |
+| `llama-3.1-8b-instant`, `llama-3.3-70b-versatile` | ❌ text-only (same `content must be a string` rejection) | — |
+| `groq/compound(-mini)`, `llama-prompt-guard-2-*`, `openai/gpt-oss-safeguard-20b` | ❌ compound/moderation models, no image description | — |
+| `whisper-large-v3(-turbo)`, `canopylabs/orpheus-*` | ❌ audio (STT / TTS) | — |
 
-Everything else on the free tier is **not** usable for vision:
+Pointing the bridge at a non-vision model surfaces a
+`description unavailable: groq HTTP 400 …` placeholder — only
+`qwen/qwen3.6-27b` works for vision on the free tier.
 
-| model | what it is |
-| --- | --- |
-| `llama-3.1-8b-instant`, `llama-3.3-70b-versatile` | text-only |
-| `groq/compound`, `groq/compound-mini` | text-only compound agents |
-| `meta-llama/llama-prompt-guard-2-22m/86m`, `openai/gpt-oss-safeguard-20b` | moderation/classifier models |
-| `whisper-large-v3(-turbo)`, `canopylabs/orpheus-*` | audio (speech-to-text / text-to-speech) |
-
-Pointing the bridge at a text-only model yields Groq HTTP 400 ("does not
-support image input"), which the bridge surfaces as a
-`description unavailable: groq HTTP 400 …` placeholder — switch to one of the
-three vision models above.
+**Free-plan budget (measured live):** each image call on
+`qwen/qwen3.6-27b` charges ~2.7K against the 8K TPM bucket (the reported
+usage is ~1.3K prompt tokens, but Groq bills an image floor) — so expect
+roughly **3 image descriptions per minute**, 1000 per day (RPD), 30 per
+minute max (RPM). Rate-limit responses carry Groq's `x-ratelimit-*`
+headers; `npm run test:groq` prints them.
 
 ## Configuration (row config on the `vision-bridge` row)
 
@@ -188,6 +187,7 @@ three vision models above.
 | `baseURL` | per provider (see table) | API base URL (chat completions for `groq`/`openai`; the Gemini endpoint for `gemini`) |
 | `endpoint` | per provider (see table) | legacy alias for `baseURL` (Gemini rows keep using it) |
 | `maxOutputTokens` | `1024` | description length cap |
+| `reasoningEffort` | `none` for `groq`, unset otherwise | reasoning effort sent to the endpoint (`reasoning_effort`); `none` keeps qwen out of thinking mode so descriptions come back without a `<think>…</think>` block |
 | `temperature` | `0.4` | sampling temperature |
 | `timeoutMs` | `30000` | per-call timeout |
 | `maxImageBytes` | `15728640` | largest image sent to the vision provider |

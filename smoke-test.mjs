@@ -164,6 +164,7 @@ const imageRequest = {
     if (init.headers.authorization !== 'Bearer gsk_test_123') throw new Error('FAIL 6: wrong auth header')
     const payload = JSON.parse(init.body)
     if (payload.model !== 'qwen/qwen3.6-27b') throw new Error('FAIL 6: wrong model ' + payload.model)
+    if (payload.reasoning_effort !== 'none') throw new Error('FAIL 6: groq should default to reasoning_effort none')
     if (payload.messages[0].role !== 'system') throw new Error('FAIL 6: system message missing')
     const imagePart = payload.messages[1].content.find((p) => p.type === 'image_url')
     if (!imagePart || !imagePart.image_url.url.startsWith('data:image/png;base64,')) {
@@ -206,6 +207,7 @@ const imageRequest = {
     }
     if (calls[0].url !== 'http://localhost:11434/v1/chat/completions') throw new Error('FAIL 7: wrong URL ' + calls[0].url)
     if (JSON.parse(calls[0].init.body).model !== 'llava:latest') throw new Error('FAIL 7: model override not applied')
+    if (JSON.parse(calls[0].init.body).reasoning_effort !== undefined) throw new Error('FAIL 7: openai provider should not send reasoning_effort')
     console.log('PASS 7: openai-compatible provider bridging — ' + bridged.text.slice(0, 100))
   } finally {
     globalThis.fetch = originalFetch
