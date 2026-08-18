@@ -43,14 +43,102 @@ that does not declare `image` input) the ability to "see" images, using a
 Descriptions are cached per attachment, so history images are described once
 per session, not on every model call.
 
-## Installation for users
+## Installation
 
-The plugin runs inside the DeepSeek Harness (DSH) **web profile**. You need
-Node + pnpm, the DSH web app running once (so the profile folder exists), and
-an API key for one vision provider (Gemini, Groq, or an OpenAI-compatible
-endpoint).
+The plugin runs inside the DeepSeek Harness (DSH) **web profile**. Both install
+paths below need Node ≥ 20 + pnpm, the DSH web app run once (so the profile
+folder exists), and an API key for one vision provider (Gemini, Groq, or an
+OpenAI-compatible endpoint).
 
-### 1. Install the package
+| Path | For | What it is |
+| --- | --- | --- |
+| [Option A — automated](#option-a--automated-install-ai-agents--scripts) | AI agents, scripts, impatient humans | One idempotent command block per OS — paste and run |
+| [Option B — manual](#option-b--manual-install-step-by-step) | Humans | The same install, explained step by step |
+
+AI agents working in this repo should also read [`AGENTS.md`](AGENTS.md), which
+restates the install facts in agent-friendly form.
+
+### Option A — Automated install (AI agents / scripts)
+
+Every step is idempotent (safe to re-run). The blocks install the default
+provider (Gemini); for Groq or an OpenAI-compatible endpoint, swap the row
+config per the [Providers](#providers) table and use the matching credential
+ref. Replace `your-gemini-key` with a real key first.
+
+**POSIX (bash/zsh):**
+
+```sh
+# 0. Provide the key for this shell only (never commit it)
+export GEMINI_API_KEY='your-gemini-key'
+
+# 1. Install the package into the web profile
+PROFILE="$HOME/.dsh/profiles/web"
+mkdir -p "$PROFILE" && cd "$PROFILE"
+pnpm add dsh-vision-bridge-dsh        # or: dsh plugin --profile web add dsh-vision-bridge-dsh
+
+# 2. Register the plugin row (skipped if already present)
+PATCH="$PROFILE/cordis.patch.yml"
+touch "$PATCH"
+if ! grep -q 'vision-bridge' "$PATCH"; then
+  [ -s "$PATCH" ] && printf '\n' >> "$PATCH"
+  cat >> "$PATCH" <<'EOF'
+- insert:
+    - id: vision-bridge
+      name: 'dsh-vision-bridge'
+EOF
+fi
+
+# 3. Store the credential (skipped if the ref already exists)
+CRED="$HOME/.dsh/.credentials.yaml"
+touch "$CRED"
+grep -q '^GEMINI_API_KEY:' "$CRED" || printf 'GEMINI_API_KEY: %s\n' "$GEMINI_API_KEY" >> "$CRED"
+
+# 4. Restart DSH (close and reopen `dsh web`), then verify the row mounts
+dsh --profile web --dump-config
+```
+
+**Windows (PowerShell):**
+
+```powershell
+# 0. Provide the key for this session only (never commit it)
+$env:GEMINI_API_KEY = 'your-gemini-key'
+
+# 1. Install the package into the web profile
+$profileDir = Join-Path $HOME '.dsh\profiles\web'
+New-Item $profileDir -ItemType Directory -Force | Out-Null
+Set-Location $profileDir
+pnpm add dsh-vision-bridge-dsh        # or: dsh plugin --profile web add dsh-vision-bridge-dsh
+
+# 2. Register the plugin row (skipped if already present)
+$patch = Join-Path $profileDir 'cordis.patch.yml'
+if (-not (Test-Path $patch)) { New-Item $patch -ItemType File | Out-Null }
+if (-not (Select-String -Path $patch -Pattern 'vision-bridge' -Quiet)) {
+  if ((Get-Item $patch).Length -gt 0) { Add-Content -Path $patch -Value '' }
+  Add-Content -Path $patch -Value @'
+- insert:
+    - id: vision-bridge
+      name: 'dsh-vision-bridge'
+'@
+}
+
+# 3. Store the credential (skipped if the ref already exists)
+$cred = Join-Path $HOME '.dsh\.credentials.yaml'
+if (-not (Test-Path $cred)) { New-Item $cred -ItemType File | Out-Null }
+if (-not (Select-String -Path $cred -Pattern '^GEMINI_API_KEY:' -Quiet)) {
+  Add-Content -Path $cred -Value "GEMINI_API_KEY: $env:GEMINI_API_KEY"
+}
+
+# 4. Restart DSH (close and reopen `dsh web`), then verify the row mounts
+dsh --profile web --dump-config
+```
+
+The dump should show the `vision-bridge` row. Final functional check: attach an
+image in a chat with a text-only model (e.g. a DeepSeek route) — it should be
+described instead of rejected with `UNSUPPORTED_CONTENT`.
+
+### Option B — Manual install (step by step)
+
+#### 1. Install the package
 
 The package is installed into your web profile's `node_modules`. From the
 profile directory, add the npm package:
@@ -72,7 +160,7 @@ pnpm add dsh-vision-bridge-dsh
 folder into `~/.dsh/profiles/node_modules/` — the user-owned module
 fallback.)
 
-### 2. Register the plugin row
+#### 2. Register the plugin row
 
 Edit `~/.dsh/profiles/web/cordis.patch.yml` and add one of the rows below.
 Gemini (the default provider):
@@ -112,7 +200,7 @@ Any OpenAI-compatible endpoint:
         apiKeyRef: OPENROUTER_API_KEY
 ```
 
-### 3. Set your API key
+#### 3. Set your API key
 
 Add the key to `~/.dsh/.credentials.yaml` (or export the env var):
 
@@ -125,7 +213,7 @@ Auth-free local endpoints (Ollama, LM Studio) still need a credential ref to
 be *present* — put any placeholder in it, e.g. `OPENAI_API_KEY: ollama`; the
 bridge sends it as a bearer token the local server ignores.
 
-### 4. Restart
+#### 4. Restart
 
 Close and reopen DSH (`dsh web`). You can confirm the row mounts by dumping
 the composed config: `dsh --profile web --dump-config`.
@@ -134,7 +222,7 @@ To verify it works, attach an image in a chat with a text-only model (e.g. a
 DeepSeek route) — it should be described instead of rejected with
 `UNSUPPORTED_CONTENT`.
 
-### Enable/disable
+#### Enable/disable
 
 Remove the `vision-bridge` row from `cordis.patch.yml` to disable the feature
 (hot-reloaded); delete the package folder to remove it permanently. See the
