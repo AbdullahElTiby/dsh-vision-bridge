@@ -9,8 +9,8 @@ signatures:
     mtime: 1787067973
     size: 10302
   - path: README.md
-    mtime: 1787066797
-    size: 13742
+    mtime: 1787068197
+    size: 13998
   - path: lib/index.js
     mtime: 1786955194
     size: 24013
@@ -89,3 +89,4 @@ Groq free tier: only `qwen/qwen3.6-27b` accepts images (~3 descriptions/min).
   (Option A automated/AI, Option B manual/human).
 - 2026-08-18 — docs shipped: version 0.2.3 published to npm, commit
   4818249 pushed to GitHub main.
+- 2026-08-18 — README: added npm version + downloads badges.
