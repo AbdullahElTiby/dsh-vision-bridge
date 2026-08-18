@@ -1,7 +1,7 @@
 # dsh-vision-bridge
 
 [![npm version](https://img.shields.io/npm/v/dsh-vision-bridge-dsh.svg)](https://www.npmjs.com/package/dsh-vision-bridge-dsh)
-[![npm downloads](https://img.shields.io/npm/dm/dsh-vision-bridge-dsh.svg)](https://www.npmjs.com/package/dsh-vision-bridge-dsh)
+[![npm downloads (total)](https://img.shields.io/npm/dt/dsh-vision-bridge-dsh.svg)](https://www.npmjs.com/package/dsh-vision-bridge-dsh)
 
 > **npm:** `dsh-vision-bridge-dsh` · **source/GitHub:** `AbdullahElTiby/dsh-vision-bridge`
 > (the npm package is named `dsh-vision-bridge-dsh` because the shorter name

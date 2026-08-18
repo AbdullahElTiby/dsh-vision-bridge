@@ -3,14 +3,14 @@ captured: 2026-08-18
 git-head: 4818249f46121d52294559fb6000f6a2988065bd
 signatures:
   - path: package.json
-    mtime: 1787068426
+    mtime: 1787068768
     size: 1299
   - path: package-lock.json
-    mtime: 1787068426
+    mtime: 1787068768
     size: 10302
   - path: README.md
-    mtime: 1787068412
-    size: 13499
+    mtime: 1787068763
+    size: 13507
   - path: lib/index.js
     mtime: 1786955194
     size: 24013
@@ -93,3 +93,5 @@ Groq free tier: only `qwen/qwen3.6-27b` accepts images (~3 descriptions/min).
 - 2026-08-18 — README Option A is now a copy-paste prompt for the user's AI
   (AI fetches repo, installs, configures, verifies); AGENTS.md frames the
   agent as the installer. Version 0.2.4.
+- 2026-08-18 — downloads badge switched from monthly (`npm/dm`, lags ~2-3
+  days) to total (`npm/dt`); real total 520. Version 0.2.5.
