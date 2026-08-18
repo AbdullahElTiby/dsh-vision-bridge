@@ -12,9 +12,16 @@ before exploring the repo. Refresh it via the `project-knowledge` skill.
 
 ## Installing this plugin into a harness (agent instructions)
 
+When a user pastes the install prompt from `README.md` § Installation
+(Option A), **you are the installer**: fetch the repo docs if you don't have
+them, then execute the procedure below. It is also what a human runs by hand.
+
 Target: the DSH **web profile** (`~/.dsh/profiles/web`). Requirements: Node
 ≥ 20, pnpm, the DSH web app run once so the profile folder exists, and one
 vision-provider API key. All steps below are idempotent — safe to re-run.
+
+If no credential exists, **ask the user for the key** — never invent or reuse
+one without asking.
 
 The full human-oriented explanation lives in `README.md` § Installation
 (Option B). The blocks here are the minimal automated path (Option A).

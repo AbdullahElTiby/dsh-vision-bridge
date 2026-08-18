@@ -3,20 +3,20 @@ captured: 2026-08-18
 git-head: 4818249f46121d52294559fb6000f6a2988065bd
 signatures:
   - path: package.json
-    mtime: 1787067973
+    mtime: 1787068426
     size: 1299
   - path: package-lock.json
-    mtime: 1787067973
+    mtime: 1787068426
     size: 10302
   - path: README.md
-    mtime: 1787068197
-    size: 13998
+    mtime: 1787068412
+    size: 13499
   - path: lib/index.js
     mtime: 1786955194
     size: 24013
   - path: AGENTS.md
-    mtime: 1787066899
-    size: 4159
+    mtime: 1787068416
+    size: 4487
 ---
 
 # dsh-vision-bridge
@@ -90,3 +90,6 @@ Groq free tier: only `qwen/qwen3.6-27b` accepts images (~3 descriptions/min).
 - 2026-08-18 — docs shipped: version 0.2.3 published to npm, commit
   4818249 pushed to GitHub main.
 - 2026-08-18 — README: added npm version + downloads badges.
+- 2026-08-18 — README Option A is now a copy-paste prompt for the user's AI
+  (AI fetches repo, installs, configures, verifies); AGENTS.md frames the
+  agent as the installer. Version 0.2.4.

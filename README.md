@@ -55,89 +55,57 @@ OpenAI-compatible endpoint).
 
 | Path | For | What it is |
 | --- | --- | --- |
-| [Option A — automated](#option-a--automated-install-ai-agents--scripts) | AI agents, scripts, impatient humans | One idempotent command block per OS — paste and run |
+| [Option A — automated](#option-a--automated-install-give-your-ai-a-prompt) | Anyone with an AI assistant | Paste one small prompt; your AI fetches the repo, installs, configures and verifies everything for you |
 | [Option B — manual](#option-b--manual-install-step-by-step) | Humans | The same install, explained step by step |
 
 AI agents working in this repo should also read [`AGENTS.md`](AGENTS.md), which
 restates the install facts in agent-friendly form.
 
-### Option A — Automated install (AI agents / scripts)
+### Option A — Automated install (give your AI a prompt)
 
-Every step is idempotent (safe to re-run). The blocks install the default
-provider (Gemini); for Groq or an OpenAI-compatible endpoint, swap the row
-config per the [Providers](#providers) table and use the matching credential
-ref. Replace `your-gemini-key` with a real key first.
+Copy the prompt below and paste it into any AI assistant that can run shell
+commands on this machine (a DSH agent, Claude, Codex, …). The AI will fetch
+the repo docs, install the package, register the plugin row, set up the
+credential and verify the result — you only supply the vision-provider API
+key when it asks for it.
 
-**POSIX (bash/zsh):**
+> ```text
+> Install the dsh-vision-bridge plugin into the DeepSeek Harness (DSH) web
+> profile on this machine.
+>
+> Plugin: npm `dsh-vision-bridge-dsh`, source github.com/AbdullahElTiby/dsh-vision-bridge.
+> It gives text-only models (e.g. DeepSeek) vision via a Gemini, Groq, or
+> OpenAI-compatible provider.
+>
+> Procedure:
+> 1. Fetch the install docs from the repo (README.md → Installation, and
+>    AGENTS.md → "Installing this plugin into a harness") and follow them.
+>    If you don't have the repo locally, fetch those files from GitHub.
+> 2. Install the package into the DSH web profile (~/.dsh/profiles/web):
+>    `pnpm add dsh-vision-bridge-dsh` (or `dsh plugin --profile web add
+>    dsh-vision-bridge-dsh`).
+> 3. Register the `vision-bridge` row in cordis.patch.yml (default provider:
+>    Gemini). Skip this if the row already exists.
+> 4. Make sure a GEMINI_API_KEY credential exists (env var or
+>    ~/.dsh/.credentials.yaml). If no key is set, ASK ME for it — never
+>    invent or reuse a key without asking.
+> 5. Verify: `dsh --profile web --dump-config` must show the vision-bridge
+>    row.
+> 6. Report what you did, whether a key is still needed, and how I can check
+>    it works (attach an image in a chat with a text-only model).
+>
+> Every step must be idempotent and safe to re-run. If I ask for Groq or an
+> OpenAI-compatible provider instead of Gemini, use the matching row config
+> and credential ref from the Providers table in the README.
+> ```
 
-```sh
-# 0. Provide the key for this shell only (never commit it)
-export GEMINI_API_KEY='your-gemini-key'
+What the AI will run — the exact idempotent commands per OS — is documented in
+[`AGENTS.md`](AGENTS.md) § "Installing this plugin into a harness (agent
+instructions)", so you can review what it did (or run the same steps yourself).
 
-# 1. Install the package into the web profile
-PROFILE="$HOME/.dsh/profiles/web"
-mkdir -p "$PROFILE" && cd "$PROFILE"
-pnpm add dsh-vision-bridge-dsh        # or: dsh plugin --profile web add dsh-vision-bridge-dsh
-
-# 2. Register the plugin row (skipped if already present)
-PATCH="$PROFILE/cordis.patch.yml"
-touch "$PATCH"
-if ! grep -q 'vision-bridge' "$PATCH"; then
-  [ -s "$PATCH" ] && printf '\n' >> "$PATCH"
-  cat >> "$PATCH" <<'EOF'
-- insert:
-    - id: vision-bridge
-      name: 'dsh-vision-bridge'
-EOF
-fi
-
-# 3. Store the credential (skipped if the ref already exists)
-CRED="$HOME/.dsh/.credentials.yaml"
-touch "$CRED"
-grep -q '^GEMINI_API_KEY:' "$CRED" || printf 'GEMINI_API_KEY: %s\n' "$GEMINI_API_KEY" >> "$CRED"
-
-# 4. Restart DSH (close and reopen `dsh web`), then verify the row mounts
-dsh --profile web --dump-config
-```
-
-**Windows (PowerShell):**
-
-```powershell
-# 0. Provide the key for this session only (never commit it)
-$env:GEMINI_API_KEY = 'your-gemini-key'
-
-# 1. Install the package into the web profile
-$profileDir = Join-Path $HOME '.dsh\profiles\web'
-New-Item $profileDir -ItemType Directory -Force | Out-Null
-Set-Location $profileDir
-pnpm add dsh-vision-bridge-dsh        # or: dsh plugin --profile web add dsh-vision-bridge-dsh
-
-# 2. Register the plugin row (skipped if already present)
-$patch = Join-Path $profileDir 'cordis.patch.yml'
-if (-not (Test-Path $patch)) { New-Item $patch -ItemType File | Out-Null }
-if (-not (Select-String -Path $patch -Pattern 'vision-bridge' -Quiet)) {
-  if ((Get-Item $patch).Length -gt 0) { Add-Content -Path $patch -Value '' }
-  Add-Content -Path $patch -Value @'
-- insert:
-    - id: vision-bridge
-      name: 'dsh-vision-bridge'
-'@
-}
-
-# 3. Store the credential (skipped if the ref already exists)
-$cred = Join-Path $HOME '.dsh\.credentials.yaml'
-if (-not (Test-Path $cred)) { New-Item $cred -ItemType File | Out-Null }
-if (-not (Select-String -Path $cred -Pattern '^GEMINI_API_KEY:' -Quiet)) {
-  Add-Content -Path $cred -Value "GEMINI_API_KEY: $env:GEMINI_API_KEY"
-}
-
-# 4. Restart DSH (close and reopen `dsh web`), then verify the row mounts
-dsh --profile web --dump-config
-```
-
-The dump should show the `vision-bridge` row. Final functional check: attach an
-image in a chat with a text-only model (e.g. a DeepSeek route) — it should be
-described instead of rejected with `UNSUPPORTED_CONTENT`.
+Final functional check: attach an image in a chat with a text-only model
+(e.g. a DeepSeek route) — it should be described instead of rejected with
+`UNSUPPORTED_CONTENT`.
 
 ### Option B — Manual install (step by step)
 
