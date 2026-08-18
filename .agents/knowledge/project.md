@@ -1,10 +1,13 @@
 ---
 captured: 2026-08-18
-git-head: 71d6154192cd5dcbebcbbee9bf4d5f8224a07c37
+git-head: 4818249f46121d52294559fb6000f6a2988065bd
 signatures:
   - path: package.json
-    mtime: 1786955771
+    mtime: 1787067973
     size: 1299
+  - path: package-lock.json
+    mtime: 1787067973
+    size: 10302
   - path: README.md
     mtime: 1787066797
     size: 13742
@@ -84,3 +87,5 @@ Groq free tier: only `qwen/qwen3.6-27b` accepts images (~3 descriptions/min).
 ## Updates
 - 2026-08-18 — initial capture; added AGENTS.md and README install split
   (Option A automated/AI, Option B manual/human).
+- 2026-08-18 — docs shipped: version 0.2.3 published to npm, commit
+  4818249 pushed to GitHub main.
